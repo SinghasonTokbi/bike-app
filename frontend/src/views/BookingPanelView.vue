@@ -9,7 +9,7 @@ import { useHomeStore } from '@/stores/home';
 const home = useHomeStore()
 const {bikes, selectedBike, form, errors} = storeToRefs(home)
 const {getBikeById, addCustomer} = home
-
+const api = import.meta.env.VITE_API
 // Define props
 const props = defineProps({
   bikeId: {
@@ -97,9 +97,9 @@ const proceedToCheckout = () => {
 
 <template>
   <div class="container" v-if="selectedBike.length > 0">
-    {{ selectedBike }}
+   
     <div class="bike-details">
-      <img src="" alt="Hunter 350" />
+      <img :src="`${api}${selectedBike[0].img_path}`" alt="" class="bike-pic"/>
       <div class="details">
         <p><strong>Model Name:</strong> {{selectedBike[0].model_name}}</p>
         <p><strong>Brand:</strong> {{selectedBike[0].brand_name}}</p>
@@ -109,6 +109,8 @@ const proceedToCheckout = () => {
         <p><strong>Seat Height:</strong> {{selectedBike[0].seatheight}}</p>
         <p><strong>Stocks:</strong> {{selectedBike[0].stocks}}</p>
       </div>
+
+      
     </div>
 
     <form class="booking-form" @submit.prevent="addCustomer(selectedBike[0].bike_id)">
@@ -186,6 +188,7 @@ body {
   padding: 20px;
 }
 
+
 .bike-details {
   display: flex;
   justify-content: space-between;
@@ -207,6 +210,7 @@ body {
   max-width: 300px;
   display: block;
   background-color: white;
+  object-fit: contain;
 }
 
 .bike-details p {

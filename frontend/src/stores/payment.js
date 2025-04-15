@@ -5,10 +5,26 @@ import { useRouter } from "vue-router"
 
 
 export const usePaymentStore = defineStore('payment', ()=>{
+    const amount = ref(null)
+    const currency = ref('INR')
+    const receipt = ref('')
+    const orderId = ref('')
+    const router = useRouter()
 
+    function generateRandomString(length) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        
+        for (let i = 0; i < length; i++) {
+          const randomIndex = Math.floor(Math.random() * characters.length);
+          result += characters[randomIndex];
+        }
+        
+        return result;
+      }
 
     const createOrder = async () => {
-        isLoadingSpinner.value = true;
+        
         try {
             const response = await axios.post('/create-order', {
                 amount: amount.value,
@@ -25,12 +41,15 @@ export const usePaymentStore = defineStore('payment', ()=>{
         }
     };
 
-    const storePaymentDetails = async (paymentId, status, details = null, paymentType = '') => {
+    const storePaymentDetails = async (amount,paymentId, status, bookId, details = null, paymentType = '') => {
         try {
             await axios.post('/store-payment-details', {
                 paymentId,
+                amount,
                 status,
                 details,
+                bookId,
+                paymentType
                
             });
         } catch (error) {
@@ -39,12 +58,23 @@ export const usePaymentStore = defineStore('payment', ()=>{
         }
     };
 
-    const payNow = async (amountValue) => {
-        amount.value = amountValue;
+    const decrementStock = async(bikeId)=>{
+        try{
+            const response  = await axios.put(`/decrement-stock/${bikeId}`)
+            
+        }catch(err){
+            console.log(err)
+        }
+    }
+
+    const payNow = async (amountValue, bookId, bikeId) => {
+        amount.value = amountValue
+        console.log("bookin id: ", bookId)
+        receipt.value = 'receipt#' + generateRandomString(5);
         await createOrder();
         const options = {
             key: 'rzp_test_daoLopIZNUyaRK',
-            amount: amount.value * 100,
+            amount: amountValue * 100,
             currency: currency.value,
             name: 'Bike Easy',
             description: 'Test Transaction',
@@ -65,31 +95,36 @@ export const usePaymentStore = defineStore('payment', ()=>{
                     const paymentType = paymentDetails.data.method;
 
 
-                    await storePaymentDetails(response.razorpay_payment_id, 'success', verificationResponse.data, paymentType);
-
+                    await storePaymentDetails(amountValue,response.razorpay_payment_id, 'success',bookId, verificationResponse.data, paymentType);
+                  
                     
-                    
+                    router.push('/')
                     
                     alert("Payment Successful");
+                    await decrementStock(bikeId)
                 } catch (error) {
-                    console.error('Error verifying payment:', error);
+                    console.error( error);
 
 
-                    await storePaymentDetails(response.razorpay_payment_id, 'failure');
+                    await storePaymentDetails(amountValue,response.razorpay_payment_id, 'failure', bookId);
                     
-
-                    alert('Payment verification failed');
-                    isError.value =true;
+                    alert("Payment Failed");
+                   
+                    
                 }
             },
             modal: {
                 ondismiss: async () => {
                     
-                    await storePaymentDetails("", 'failure');
+                    await storePaymentDetails(amountValue,response.razorpay_payment_id, 'failure', bookId);
                     
                 }
             },
-            prefill: {},
+            prefill: {
+                name: 'Tokbi',
+                email: 'tokbi@gmail.com',
+                contact: '9999999999'
+            },
             notes: {
                 address: 'Razorpay Corporate Office',
             },
@@ -101,6 +136,6 @@ export const usePaymentStore = defineStore('payment', ()=>{
         rzp1.open();
     };
 
-    return (payNow)
+    return {payNow}
 
 })

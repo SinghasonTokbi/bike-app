@@ -1,17 +1,34 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
 const customers = ref([]); // Store all customer data
 
 // Fetch customers from the server
 const fetchCustomers = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/customers');
-    customers.value = await response.json();
+    const response = await axios.get('/customers')
+
+    customers.value = response.data
+    console.log("CUstomers: ",customers.value)
+    
   } catch (error) {
+    
     console.error('Failed to fetch customers:', error);
   }
 };
+
+const deleteCustomer = async(id)=>{
+  try{
+    const response = await axios.delete(`/customer/${id}`)
+
+    alert("Customer deleted")
+    fetchCustomers()
+  }catch(err){
+    alert("cannot delete customer")
+    console.log(err)
+  }
+}
 
 // Add a customer programmatically
 const addCustomer = async (customer) => {
@@ -68,36 +85,51 @@ onMounted(() => {
 </script>
 
 <template>
+  
   <section class="container">
     <!-- Customer Table -->
     <table>
       <thead>
         <tr>
           <th>ID</th>
-          <th>First Name</th>
-          <th>Last Name</th>
+          <th>Name</th>
+          <th>Address</th>
+          
           <th>Email</th>
           <th>Phone Number</th>
           <th>Bike Model ID</th>
-          <th>Status</th>
+          <th>Booking date</th>
+          <th></th>
+          <!-- <th>Status</th> -->
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(customer, index) in customers" :key="index">
-          <td>{{ customer.id }}</td>
-          <td>{{ customer.firstName }}</td>
-          <td>{{ customer.lastName }}</td>
+        <tr v-for="customer in customers" :key="customer.cust_id">
+          <td>{{ customer.cust_id }}</td>
+          <td>{{ customer.cname }}</td>
+          <td>{{ customer.address }}</td>
+          
           <td>{{ customer.email }}</td>
-          <td>{{ customer.phoneNumber }}</td>
-          <td>{{ customer.bikeModelId }}</td>
-          <td>{{ customer.status }}</td>
+          <td>{{ customer.phoneno }}</td>
+          <td>{{ customer.bike_id}}</td>
+          <td>{{ customer.book_dt}}</td>
+          <td class="delete" @click="deleteCustomer(customer.cust_id)">delete</td>
+          <!-- <td>{{ customer.status }}</td> -->
         </tr>
       </tbody>
     </table>
   </section>
 </template>
 <style scoped>
+.delete{
+  color: red;
+  cursor: pointer;
 
+}
+
+.delete:hover{
+  text-decoration: underline;
+}
 container {
     display: flex;
     flex-direction: column;

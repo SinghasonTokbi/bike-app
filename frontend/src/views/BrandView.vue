@@ -9,6 +9,7 @@ import { useHomeStore } from '@/stores/home';
 const home = useHomeStore()
 const {brands} = storeToRefs(home)
 const {getBrands} = home
+const api = import.meta.env.VITE_API
 
 onMounted(()=>{
     getBrands()
@@ -16,11 +17,18 @@ onMounted(()=>{
 </script>
 <template>
     <div class="brand-grid">
+      
       <section class="brand-container">
-        <RouterLink :to="`/Brand/${e.brand_id}`" class="brand" v-for="e in brands" :key="e.id">
-          <img :src="e.imgPatn" :alt="e.brand_name">
-          <div>{{ e.brand_name}}</div>
-        </RouterLink>
+        <div v-for="e in brands" :key="e.id">
+            <RouterLink :to="`/Brand/${e.brand_id}`" class="brand" >
+            
+            
+                <img :src="`${api}${e.brand_imgpath}`" :alt="e.brand_name">
+                <!-- <div>{{ e.brand_name}}</div> -->
+              </RouterLink>
+        </div>
+        
+       
       </section>
     </div>
   </template>

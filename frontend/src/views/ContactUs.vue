@@ -1,7 +1,43 @@
 <script setup>
+    import axios from 'axios';
+    import { ref, onMounted } from 'vue';
+
+    const contacts = ref([])
+    const getContacts = async()=>{
+        try{
+            const response = await axios.get('/contacts')
+            contacts.value = response.data
+            console.log(contacts.value)
+
+        }catch(err){
+            console.log(err)
+        }
+    }
+
+    const deleteContact = async(id)=>{
+        try{
+            console.log("erer")
+            const response = await axios.delete(`/custenquire/${id}`)
+            alert("1 row deleted")
+            getContacts()
+        }catch(err){
+            console.log(err)
+            alert("cannot delete")
+        }
+    }
+
+    onMounted(()=>{
+        getContacts()
+    })
+
+
+
+
 </script>
 <template>
     <section class="container">
+
+       
     <table>
         <thead>
             <tr>
@@ -10,15 +46,17 @@
                 <th>Phone</th>
                 <th>Email</th>
                 <th>Message</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>DSADSA</td>
-                <td>dsaSDA</td>
-                <td>dsadsa</td>
-                <td>dsadsad</td>
-                <td>dsadsadsa</td>
+            <tr v-for="c in contacts">
+                <td>{{c.firstname}}</td>
+                <td>{{ c.lastname }}</td>
+                <td>{{c.phoneno}}</td>
+                <td>{{c.email}}</td>
+                <td>{{c.messages}}</td>
+                <td ><span class="delete" @click="deleteContact(c.no_id)">delete</span></td>
             </tr>
         </tbody>
     </table>
@@ -35,6 +73,15 @@ container {
     margin-top: 20px;
 }
 
+
+.delete{
+    color: red;
+    cursor: pointer;
+}
+
+.delete:hover{
+    text-decoration: underline;
+}
 table {
     width: 100%;
     border-collapse: collapse; 

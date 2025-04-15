@@ -1,4 +1,5 @@
 <script setup>
+import axios from "axios";
 import { ref } from "vue";
 
 // Reactive variables for form fields
@@ -25,23 +26,18 @@ const validateForm = () => {
 };
 
 // Function to simulate form submission
-const handleSubmit = (e) => {
-  e.preventDefault(); // Prevent page reload
-
-  // Validate form inputs
-  const errorMessage = validateForm();
-  if (errorMessage) {
-    submissionStatus.value = errorMessage; // Display validation error
-    return;
+const handleSubmit = async () => {
+  try{
+    const response = await axios.post('/book-contactus',{
+      firstname: firstName.value,
+      lastname: lastName.value,
+      phoneno: phone.value,
+      email: email.value,
+      messages: message.value
+    })
+  }catch(err){
+    console.log(err)
   }
-
-  // Simulate form submission
-  submissionStatus.value = "Submitting..."; // Show loading message
-
-  setTimeout(() => {
-    submissionStatus.value = "Your message has been submitted successfully!";
-    clearForm(); // Clear form fields after successful submission
-  }, 2000); // Simulate a delay (e.g., API call)
 };
 
 // Function to clear the form fields
@@ -58,7 +54,7 @@ const clearForm = () => {
   <section class="contact">
     <div class="contact-form">
       <h2>Contact Us</h2>
-      <form @submit="handleSubmit">
+      <form @submit.prevent="handleSubmit">
         <label for="first-name">First Name</label>
         <input
           type="text"

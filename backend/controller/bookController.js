@@ -39,7 +39,19 @@ cron.schedule('*/60 * * * *', async () => {
     } catch (err) { }
 })
 
+export const getBookingById = async(req, res)=>{
+    try{
+        const {bookId} = req.params
 
+        const book = await pool.query("select * from cust_booking where cust_id = $1 limit 1", [bookId])
+
+        res.json(book.rows[0])
+
+    }catch(err){
+        console.log(err)
+        res.json(err)
+    }
+}
 
 export const insertbooking = async (req, res) => {
     try {

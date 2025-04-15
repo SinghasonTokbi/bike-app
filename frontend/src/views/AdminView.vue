@@ -1,55 +1,13 @@
 <script setup>
 import { ref } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import { storeToRefs } from 'pinia';
 
-// Reactive variables for form fields
-const username = ref('');
-const email = ref('');
-const password = ref('');
 
-// Reactive variable for submission status
-const submissionStatus = ref('');
+const auth = useAuthStore()
 
-// Function to validate the form inputs
-const validateForm = () => {
-  if (!username.value || !email.value || !password.value) {
-    submissionStatus.value = 'All fields are required.';
-    return false;
-  }
-
-  // Basic email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email.value)) {
-    submissionStatus.value = 'Please enter a valid email address.';
-    return false;
-  }
-
-  return true; // Form is valid
-};
-
-// Function to handle form submission
-const handleSubmit = (e) => {
-  e.preventDefault(); // Prevent the default form submission (page reload)
-
-  // Validate form inputs
-  if (!validateForm()) {
-    return; // Stop submission if validation fails
-  }
-
-  // Simulate a successful login submission
-  submissionStatus.value = 'Submitting...'; // Show loading message
-
-  setTimeout(() => {
-    submissionStatus.value = 'Login successful!'; // Show success message
-    clearForm(); // Clear form fields after successful submission
-  }, 2000); // Simulate an API call delay
-};
-
-// Function to clear the form fields
-const clearForm = () => {
-  username.value = '';
-  email.value = '';
-  password.value = '';
-};
+const {handleLogin} = auth
+const { email, password, error} = storeToRefs(auth)
 </script>
 
 <template>
@@ -58,13 +16,8 @@ const clearForm = () => {
       <div class="user-icon">👤</div>
 
       <!-- Form -->
-      <form @submit="handleSubmit">
-        <input 
-          type="text" 
-          placeholder="Username" 
-          v-model="username" 
-          required 
-        />
+      <form @submit.prevent="handleLogin">
+        
         <input 
           type="email" 
           placeholder="Email" 
@@ -77,16 +30,20 @@ const clearForm = () => {
           v-model="password" 
           required 
         />
+        <span class="error">{{error}}</span>
         <button type="submit">Login</button>
       </form>
 
-      <!-- Display submission status -->
-      <p v-if="submissionStatus" class="status-message">{{ submissionStatus }}</p>
+      
     </div>
   </section>
 </template>
 
 <style scoped>
+.error{
+  font-size: 16px;
+  color:red;
+}
   .login {
     display: flex;
     width: 100%;

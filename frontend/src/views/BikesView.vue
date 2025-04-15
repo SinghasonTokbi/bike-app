@@ -1,11 +1,18 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useHomeStore } from '@/stores/home';
+import { storeToRefs } from 'pinia';
+import axios from 'axios';
+const api = import.meta.env.VITE_API
+const home = useHomeStore();
+const { getBrands } = home;
+const { brands } = storeToRefs(home);
 
 // Form data state
 const formData = ref({
   bikeId: '',
   modelName: '',
-  brand: '',
+  brand: '', // This will store the selected brand's ID
   price: '',
   horsepower: '',
   torque: '',
@@ -20,60 +27,84 @@ const bikes = ref([]);
 // Handle file selection
 const handleFileChange = (event) => {
   formData.value.image = event.target.files[0];
+  console.log(formData.value.image)
 };
 
 // Fetch existing bikes from the server (initial load)
 const fetchBikes = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/bikes');
-    if (!response.ok) throw new Error('Failed to fetch bikes');
-
-    bikes.value = await response.json();
+    const response = await axios.get('/bikes');
+    
+    bikes.value = response.data
   } catch (error) {
     console.error(error);
   }
 };
 
 // Submit the form and add a new bike
-const addBike = async (event) => {
-  event.preventDefault();
-
-  const data = new FormData();
-  Object.entries(formData.value).forEach(([key, value]) => {
-    data.append(key, value);
-  });
-
+const handleSubmit = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/bikes', {
-      method: 'POST',
-      body: data,
-    });
-
-    if (!response.ok) throw new Error('Failed to add bike');
-
-    const result = await response.json();
-    bikes.value.push(result.bike); // Add the new bike to the list
-    console.log('Bike added:', result);
-
-    // Reset the form
+    const formDataToSend = new FormData();
     Object.keys(formData.value).forEach((key) => {
-      formData.value[key] = key === 'image' ? null : '';
+      if (key === 'image') {
+        if (formData.value[key]) {
+          formDataToSend.append('image', formData.value[key]);
+        }
+      } else {
+        formDataToSend.append(key, formData.value[key]);
+      }
     });
+
+    // Send the form data (including the file) to the server
+    const response = await axios.post('/add-bikes', formDataToSend, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    // Handle successful response
+    console.log(response.data);
+    await fetchBikes();
+    alert('Bike added successfully!');
   } catch (error) {
     console.error(error);
+    alert('An error occurred while adding the bike.');
   }
 };
 
-// Fetch bikes when the component loads
-fetchBikes();
+const deleteBike = async(bikeId)=>{
+  try{
+    const response = await axios.delete(`/del-bike/${bikeId}`)
+    fetchBikes()
+    alert("bike deleted")
+  }catch(err){
+    console.log(err)
+    alert('Cannot delete! Bike already booked by customers')
+  }
+}
+
+// Fetch bikes and brands when the component loads
+onMounted(async () => {
+  await fetchBikes();
+  await getBrands();
+});
 </script>
 
 <template>
-  <div class="container">
-    <form class="form" @submit="addBike">
-      <input v-model="formData.bikeId" placeholder="Bike ID" required />
+  <div class="container" v-if="brands && brands.length > 0">
+   
+    <form @submit.prevent="handleSubmit">
+      <!-- <input v-model="formData.bikeId" placeholder="Bike ID" required /> -->
       <input v-model="formData.modelName" placeholder="Model Name" required />
-      <input v-model="formData.brand" placeholder="Brand" required />
+
+      <!-- Select input for brand -->
+      <select v-model="formData.brand" required>
+        <option value="" disabled>Select Brand</option>
+        <option v-for="brand in brands" :key="brand.brand_id" :value="brand.brand_id">
+          {{ brand.brand_name }}
+        </option>
+      </select>
+
       <input v-model="formData.price" placeholder="Price" required />
       <input v-model="formData.horsepower" placeholder="Horsepower" required />
       <input v-model="formData.torque" placeholder="Torque" required />
@@ -86,6 +117,7 @@ fetchBikes();
     <table>
       <thead>
         <tr>
+          <th></th>
           <th>Bike ID</th>
           <th>Model Name</th>
           <th>Brand</th>
@@ -94,18 +126,21 @@ fetchBikes();
           <th>Torque</th>
           <th>Seat Height</th>
           <th>Stocks</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(bike, index) in bikes" :key="index">
-          <td>{{ bike.bikeId }}</td>
-          <td>{{ bike.modelName }}</td>
-          <td>{{ bike.brand }}</td>
-          <td>{{ bike.price }}</td>
-          <td>{{ bike.horsepower }}</td>
-          <td>{{ bike.torque }}</td>
-          <td>{{ bike.seatHeight }}</td>
-          <td>{{ bike.stocks }}</td>
+        <tr v-for="b in bikes">
+          <td><img :src="`${api}${b.img_path}`" alt="" class="bikeImg"></td>
+          <td>{{ b.bike_id}}</td>
+          <td>{{ b.model_name }}</td>
+          <td>{{ b.brand_name }}</td>
+          <td>{{ b.price }}</td>
+          <td>{{ b.horsepower}}</td>
+          <td>{{b.torque}}</td>
+          <td>{{b.seatheight}}</td>
+          <td>{{b.stocks }}</td>
+          <td class="delete" @click="deleteBike(b.bike_id)">Delete</td>
         </tr>
       </tbody>
     </table>
@@ -120,6 +155,22 @@ fetchBikes();
     width: 100%;
     max-width: 800px; 
     margin-top: 20px;
+}
+
+.delete{
+  color: red;
+ 
+  cursor: pointer;
+}
+
+.delete:hover{
+  text-decoration: underline;
+
+}
+.bikeImg{
+  height: 100px;
+  width: 100px;
+  object-fit:contain;
 }
 
 table {
@@ -183,7 +234,6 @@ button:hover {
     transform: scale(1.05);
 }
 
-
 input, textarea, select {
     width: 100%;
     padding: 5px; 
@@ -201,8 +251,4 @@ label {
     color: #333;
     margin-bottom: 4px; 
 }
-
-
-
 </style>
-

@@ -1,4 +1,7 @@
 <script setup>
+ import { useAuthStore } from '@/stores/auth';
+ const auth =useAuthStore()
+ const {handleLogout} = auth
 </script>
 
 <template>
@@ -6,7 +9,8 @@
     <RouterLink to="/admin" class="link">Bikes</RouterLink >
     <RouterLink to="/Customers" class="link">Customers</RouterLink>
     <RouterLink to="/Payments" class="link">Transactions</RouterLink>
-    <RouterLink to="/Contact" class="link">Contact Us</RouterLink>
+    <RouterLink to="/Contact" class="link" >Contact Us</RouterLink>
+    <span class="link" @click="handleLogout()">Logout</span>
   </nav>   
     
 </template>

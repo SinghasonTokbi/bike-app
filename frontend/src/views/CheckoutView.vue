@@ -3,18 +3,23 @@ import {  computed } from "vue";
 import {ref, onMounted} from 'vue'
 import { storeToRefs } from 'pinia';
 import { useHomeStore } from '@/stores/home';
+import { usePaymentStore } from "@/stores/payment";
 
 const home = useHomeStore()
+const payment = usePaymentStore()
 
-const {bikes, selectedBike} = storeToRefs(home)
-const { getBikeById} = home
+const {payNow} = payment
+
+const {bikes,booking, selectedBike} = storeToRefs(home)
+const { getBikeById, getBookingById} = home
 // Bike price
 const bikePrice = 187000;
 
 const bookingAmount = computed(() => (bikePrice * 1.7) / 100);
-
+const api = import.meta.env.VITE_API
 const props = defineProps({
-  bikeId: {type: String, required: true}
+  bikeId: {type: String, required: true},
+  bookId:{type: String, required: true},
 })
 
 const calculate = (amount)=>{
@@ -23,6 +28,7 @@ const calculate = (amount)=>{
 
 onMounted(()=>{
   getBikeById(Number(props.bikeId))
+  // getBookingById(Number(props.bookId))
   // console.log(selectedBike.value)
   // const bikePrice = selectedBike.value[0].price;
   // const bookingAmount = computed(() => (bikePrice * 1.7) / 100);
@@ -34,17 +40,19 @@ onMounted(()=>{
 <template>
   <div class="container" v-if="selectedBike.length > 0">
     <!-- Bike Details -->
+     
     <div class="bike-details">
-      <img src="" alt="Hunter 350" />
-      {{ selectedBike }}
+      <img alt="Hunter 350" :src="`${api}${selectedBike[0].img_path}`" />
+      
+     
       <div class="details">
-        <p><strong>Model Name:</strong> Hunter 350</p>
-        <p><strong>Brand:</strong> Royal Enfield</p>
-        <p><strong>Price (₹):</strong> ₹{{ bikePrice.toLocaleString() }}</p>
-        <p><strong>Horsepower:</strong></p>
-        <p><strong>Torque:</strong> 27</p>
-        <p><strong>Seat Height:</strong> 3</p>
-        <p><strong>Stocks:</strong> 1</p>
+        <p><strong>Model Name:</strong> {{selectedBike[0].model_name}}</p>
+        <p><strong>Brand:</strong> {{selectedBike[0].brand_name}}</p>
+        <p><strong>Price (₹):</strong> {{selectedBike[0].price}}</p>
+        <p><strong>Horsepower:</strong> {{selectedBike[0].horsepower}}</p>
+        <p><strong>Torque:</strong> {{selectedBike[0].torque}}</p>
+        <p><strong>Seat Height:</strong>  {{selectedBike[0].seatheight}}</p>
+        <p><strong>Stocks:</strong>  {{selectedBike[0].stocks}}</p>
       </div>
     </div>
 
@@ -60,7 +68,7 @@ onMounted(()=>{
         placeholder="Booking amount"
       />
 
-      <button type="submit" class="proceed">Proceed to Check Out</button>
+      <button type="submit" class="proceed" @click="payNow(calculate(selectedBike[0].price).toFixed(2), Number(props.bookId), selectedBike[0].bike_id)">Pay and Book</button>
     </div>
   </div>
 </template>
@@ -98,6 +106,7 @@ onMounted(()=>{
     display: block;
     background-color:white;
     align-items: right;
+    object-fit: contain;
   }
   
   .details {

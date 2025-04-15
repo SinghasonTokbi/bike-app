@@ -1,29 +1,54 @@
 <script setup>
+
+    import { ref, onMounted } from 'vue';
+    import axios from 'axios';
+    const payments = ref([])
+    const getPayments = async()=>{
+        try{
+            const response = await axios.get('/payment')
+            payments.value = response.data
+            console.log(payments.value)
+
+
+        }catch(err){
+            console.log(err)
+        }
+    }
+
+    onMounted(()=>{
+        getPayments()
+    })
+
+    
+
 </script>
 <template>
     <section class="container">
+      
     <table>
         <thead>
             <tr>
-                <th>trans_id</th>
-                <th>Customer Name</th>
-                <th>address</th>
-                <th>email</th>
-                <th>Phoneno</th>
-                <th>amount</th>
-                <th>booking_id</th>
+                <th>id</th>
+                <th>Reference Id</th>
+                <th>Booking Id</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Method</th>
+                
+              
+                
                
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>DSADSA</td>
-                <td>dsaSDA</td>
-                <td>dsadsa</td>
-                <td>dsadsad</td>
-                <td>dsadsad</td> 
-                <td>dsadsad</td>
-                <td>dsadsad</td>
+            <tr v-for="p in payments" :key="p.transaction_id">
+                <td>{{p.transaction_id}}</td>
+                <td>{{p.ref_id}}</td>
+                <td>{{p.booking_id}}</td>
+                <td>{{p.amount}}</td>
+                <td>{{p.status}}</td> 
+                <td><span v-if="p.method">{{p.method}}</span><span v-else>null</span></td>
+               
                
             </tr>
         </tbody>

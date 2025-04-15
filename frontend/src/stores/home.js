@@ -8,6 +8,7 @@ export const useHomeStore = defineStore('home', ()=>{
     const brands = ref([])
     const bikes = ref([])
     const selectedBike = ref({});
+    const booking = ref({})
     const BookingData = ref({
         name: '',
         address: '',
@@ -58,7 +59,7 @@ export const useHomeStore = defineStore('home', ()=>{
     }
     const getBikeById = async(bikeId)=>{
         try{
-            const response = await axios.get(`/bikes/${bikeId}`)
+            const response = await axios.get(`/bike/${bikeId}`)
             selectedBike.value = response.data
         }catch(err){
             console.log(err)
@@ -67,11 +68,23 @@ export const useHomeStore = defineStore('home', ()=>{
 
     const addCustomer = async(bikeId)=>{
         try{
-            console.log("bikeidididi: ", bikeId)
+           
             const response = await axios.post('/customer/add', {form: form.value, bikeId})
-
-            router.push(`/CheckoutView/${bikeId}`)
+            const bookId = response.data
             
+
+            router.push(`/CheckoutView/${bikeId}/${bookId}`)
+            
+        }catch(err){
+            console.log(err)
+        }
+    }
+
+    const getBookingById = async(bookId)=>{
+        try{
+            const response = await axios.get(`/booking/${bookId}`)
+            booking.value = response.data
+
         }catch(err){
             console.log(err)
         }
@@ -81,5 +94,5 @@ export const useHomeStore = defineStore('home', ()=>{
 
 
 
-    return {addCustomer, getBikeById, brands, form, errors, getBrands, bikes, getBikeByBrand, selectedBike, BookingData}
+    return {getBookingById, booking,addCustomer, getBikeById, brands, form, errors, getBrands, bikes, getBikeByBrand, selectedBike, BookingData}
 })

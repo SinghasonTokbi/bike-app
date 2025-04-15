@@ -8,6 +8,9 @@ import { RouterLink } from 'vue-router';
             <h1>Start your adventure with ease!<br>Book your bike in just a few clicks and get ready to ride.</h1>
             <RouterLink to="/brand" class="button">Book</RouterLink>
           </section>
+          <section class="banner">
+
+          </section>
         
      </section>
    
@@ -18,6 +21,16 @@ import { RouterLink } from 'vue-router';
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+    }
+
+    .banner{
+      width: 100%;
+      height: 50vh;
+    
+      background: url(https://wallpaperaccess.com/full/2300896.jpg);
+      background-size: cover;
+      background-repeat: no-repeat;
+    
     }
 
     body {

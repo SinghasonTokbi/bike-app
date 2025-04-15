@@ -22,24 +22,51 @@ export const getBikesID = async (req, res) => {
 
 }
 
+export const decrementStock = async (req, res) => {
+    try {
+        console.log("STOCKSKSKS")
+      const { bikeId } = req.params;
+      const findBike = await pool.query('SELECT stocks FROM bikes WHERE bike_id = $1', [bikeId]);
+  
+      if (findBike.rows.length === 0) {
+        return res.status(404).json({ error: 'Bike not found' });
+      }
+
+      const currentStock = findBike.rows[0].stocks;
+  
+      if (currentStock <= 0) {
+        return res.status(400).json({ error: 'No stock available to decrement' });
+      }
+  
+      const updatedStock = currentStock - 1;
+  
+      await pool.query('UPDATE bikes SET stocks = $1 WHERE bike_id = $2', [updatedStock, bikeId]);
+  
+      res.status(200).json({ message: 'Stock updated successfully', updatedStock });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Failed to update stock' });
+    }
+  };
+  
+
 
 export const getbikes = async (req, res) => {
     console.log("hey its working")
     try {
         const getBike = await pool.query(
-            "SELECT * FROM bikes")
-        if (!getBike) {
-            return res.json({ message: 'cannot get bike' })
-        }
+            "SELECT * FROM bikes, brands where bikes.brand_id = brands.brand_id")
+        
 
         res.json(getBike.rows)
     } catch (err) {
-        res.status(500).json({ err })
+        res.json(err)
     }
 
 }
 export const getbikesbyBrand = async (req, res) => {
     const {brandId}=req.params
+    console.log("brand id", brandId)
     console.log("hey its working")
     try {
         const getBike = await pool.query(
@@ -62,9 +89,7 @@ export async function deleteBike(req, res) {
     try {
         const delAdmin = await pool.query(
             "DELETE FROM bikes WHERE bike_id=$1", [data.id])
-        if (!delAdminAdmin) {
-            return res.json({ message: 'cannot delete' })
-        }
+        
         res.json(delAdmin.rows)
     } catch (err) {
         console.log(err)
@@ -93,19 +118,40 @@ export async function addBike(req, res) {
 }
 export const insertBikes = async (req, res) => {
     try {
-        console.log("run")
-        const bikesdata = await json.parse(req.body.bikesdata)
-        console.log(bikesdata)
-        const bikesimgs = req.files.bikesimgs ? req.files.bikesimgs[0] : null
-        const bikesimgpath = bikesimgs ? `/uploads/${bikesimgs.filename}` : null
-        const insertBikes = await pool.query(
-            "INSERT INTO bikes(model_name,brand,price,horsepower,torque,seatheight,imp_path) values($1,$2,$3,$4,$5,$6,$7) ", [bikesdata.bikesimgs, bikesimgpath]
-        )
-        res.json({ message: 'yesssss' })
-
+      console.log("bikeimg: ", req.file);  // Should now log the file object if it's correctly uploaded.
+  
+      const { bikeId, modelName, brand, price, horsepower, torque, seatHeight, stocks } = req.body;
+      
+      // Handle image file, check if it's uploaded
+      const image = req.file ? req.file.filename : null;
+      if (!image) {
+        return res.status(400).json({ error: "Image file is required" });
+      }
+  
+      const data = [
+        brand,
+        modelName,
+        price,
+        horsepower,
+        torque,
+        seatHeight,
+        `/uploads/${image}`, 
+        stocks,
+      ];
+  
+      
+      const insert = await pool.query(
+        "INSERT INTO bikes(brand_id, model_name, price, horsepower, torque, seatheight, img_path, stocks) VALUES($1, $2, $3, $4, $5, $6, $7, $8)",
+        data
+      );
+  
+      res.status(201).json(insert);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to insert bike" });
     }
-    catch (err) { }
-}
+  };
+  
 export const mount=async(req,res)=>{
     const bikes=ref([])
 const selectbikevalue=ref(null)
